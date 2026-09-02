@@ -398,6 +398,7 @@ router.post(
         data: newStudent,
       });
     } catch (err) {
+      console.error("Student creation failed:", err);
       // Catch duplicate unique email constraint violation (23505)
       if (err.code === '23505') {
         if (err.constraint && err.constraint.includes('email')) {

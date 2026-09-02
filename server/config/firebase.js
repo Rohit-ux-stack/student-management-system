@@ -13,6 +13,13 @@ dotenv.config();
 let firebaseApp = null;
 let storageBucket = null;
 
+const formatPrivateKey = (key) => {
+  if (!key) return undefined;
+  return key
+    .replace(/^["']|["']$/g, '') // Remove wrapping single/double quotes if present
+    .replace(/\\n/g, '\n');      // Convert literal escaped \n strings into true newlines
+};
+
 /**
  * Initializes and returns the Firebase Admin instance using environment variables.
  * Does not rely on hardcoded service account JSON files.
@@ -25,13 +32,8 @@ export function initializeFirebaseAdmin() {
 
   const projectId = process.env.FIREBASE_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+  const privateKey = formatPrivateKey(process.env.FIREBASE_PRIVATE_KEY);
   const storageBucketUrl = process.env.FIREBASE_STORAGE_BUCKET;
-
-  if (privateKey) {
-    // Handle escaped newlines in environment variable strings
-    privateKey = privateKey.replace(/\\n/g, '\n');
-  }
 
   const isPlaceholderKey =
     !privateKey ||
