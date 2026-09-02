@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { testDbConnection } from './config/db.js';
-import { getFirebaseStorageBucket } from './config/firebase.js';
+import { getSupabaseClient, STORAGE_BUCKET } from './config/supabaseStorage.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,8 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 // Comprehensive Health & Database Diagnostic Endpoint
 app.get('/api/health', async (req, res) => {
   const dbHealth = await testDbConnection();
-  const bucket = getFirebaseStorageBucket();
-  const storageConfigured = Boolean(bucket);
+  const supabase = getSupabaseClient();
+  const storageConfigured = Boolean(supabase);
 
   const isHealthy = dbHealth.connected;
   const statusCode = isHealthy ? 200 : 503;
@@ -49,8 +49,9 @@ app.get('/api/health', async (req, res) => {
       ...(dbHealth.error ? { error: dbHealth.error, code: dbHealth.code } : {}),
     },
     storage: {
+      provider: 'supabase',
       status: storageConfigured ? 'configured' : 'not_configured',
-      bucket: bucket?.name || process.env.FIREBASE_STORAGE_BUCKET || null,
+      bucket: STORAGE_BUCKET,
     },
   });
 });

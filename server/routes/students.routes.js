@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { query } from '../config/db.js';
-import { getFirebaseStorageBucket } from '../config/firebase.js';
+import { getSupabaseClient, STORAGE_BUCKET } from '../config/supabaseStorage.js';
 import { uploadStudentPhoto } from '../middleware/upload.js';
 import { validateStudent } from '../middleware/validateStudent.js';
 import { logActivity } from '../utils/logger.js';
@@ -8,92 +8,76 @@ import { logActivity } from '../utils/logger.js';
 const router = Router();
 
 /**
- * Helper to upload a file buffer to Firebase Storage
- * @param {Express.Multer.File} file - Uploaded file from multer memory storage
- * @param {string} identifier - Student UUID or identifier prefix
- * @returns {Promise<string|null>} - Public/Signed download URL
+ * Upload a file buffer to Supabase Storage.
+ * Returns the public URL on success, null on any failure (never throws).
+ * @param {Express.Multer.File} file
+ * @param {string} identifier - Student UUID or temp prefix
+ * @returns {Promise<string|null>}
  */
-async function uploadPhotoToFirebase(file, identifier) {
+async function uploadPhotoToSupabase(file, identifier) {
   if (!file) return null;
 
   try {
-    const bucket = getFirebaseStorageBucket();
-    if (!bucket) {
-      console.warn(
-        '⚠️  Firebase Storage bucket is not available. Photo upload skipped.'
-      );
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      console.warn('⚠️  Supabase client not available. Photo upload skipped.');
       return null;
     }
 
-    const timestamp = Date.now();
-    const sanitizedName = (file.originalname || 'photo.jpg').replace(
-      /[^a-zA-Z0-9.-]/g,
-      '_'
-    );
-    const destination = `students/${identifier}/${timestamp}-${sanitizedName}`;
-    const fileRef = bucket.file(destination);
+    const sanitizedName = (file.originalname || 'photo.jpg').replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `students/${identifier}/${Date.now()}-${sanitizedName}`;
 
-    await fileRef.save(file.buffer, {
-      metadata: {
+    const { error: uploadError } = await supabase.storage
+      .from(STORAGE_BUCKET)
+      .upload(filePath, file.buffer, {
         contentType: file.mimetype,
-      },
-      resumable: false,
-    });
-
-    try {
-      await fileRef.makePublic();
-      return (
-        fileRef.publicUrl() ||
-        `https://storage.googleapis.com/${bucket.name}/${destination}`
-      );
-    } catch {
-      // If uniform bucket-level access prevents makePublic(), generate long-lived signed URL
-      const [signedUrl] = await fileRef.getSignedUrl({
-        action: 'read',
-        expires: '01-01-2099',
+        upsert: false,
       });
-      return signedUrl;
+
+    if (uploadError) {
+      console.error('❌ Supabase Storage upload error:', uploadError.message);
+      return null;
     }
+
+    const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(filePath);
+    return data.publicUrl || null;
   } catch (err) {
-    console.error('❌ uploadPhotoToFirebase error:', err.message);
-    return null; // Always degrade gracefully — never crash the request
+    console.error('❌ uploadPhotoToSupabase error:', err.message);
+    return null; // Degrade gracefully — never crash the request
   }
 }
 
 /**
- * Helper to safely delete an existing photo from Firebase Storage
+ * Delete a photo from Supabase Storage by parsing its public URL.
+ * Fails gracefully — warns but never throws or blocks the calling operation.
  * @param {string} photoUrl
  */
-async function deletePhotoFromFirebase(photoUrl) {
+async function deletePhotoFromSupabase(photoUrl) {
   if (!photoUrl || typeof photoUrl !== 'string') return;
 
   try {
-    const bucket = getFirebaseStorageBucket();
-    if (!bucket) return;
+    const supabase = getSupabaseClient();
+    if (!supabase) return;
 
-    let filePath = null;
-    if (photoUrl.includes(`${bucket.name}/`)) {
-      const parts = photoUrl.split(`${bucket.name}/`);
-      if (parts[1]) {
-        filePath = decodeURIComponent(parts[1].split('?')[0]);
-      }
-    } else if (photoUrl.includes('/o/')) {
-      const parts = photoUrl.split('/o/');
-      if (parts[1]) {
-        filePath = decodeURIComponent(parts[1].split('?')[0]);
-      }
+    // Supabase public URL pattern:
+    // https://<ref>.supabase.co/storage/v1/object/public/<bucket>/<path>
+    const marker = `/public/${STORAGE_BUCKET}/`;
+    const markerIndex = photoUrl.indexOf(marker);
+    if (markerIndex === -1) {
+      console.warn('⚠️  Could not parse Supabase Storage path from URL:', photoUrl);
+      return;
     }
 
-    if (filePath) {
-      const fileRef = bucket.file(filePath);
-      const [exists] = await fileRef.exists();
-      if (exists) {
-        await fileRef.delete();
-        console.log(`🗑️  Deleted previous photo from Firebase Storage: ${filePath}`);
-      }
+    const filePath = decodeURIComponent(photoUrl.slice(markerIndex + marker.length).split('?')[0]);
+
+    const { error } = await supabase.storage.from(STORAGE_BUCKET).remove([filePath]);
+    if (error) {
+      console.warn('⚠️  Could not delete photo from Supabase Storage:', error.message);
+    } else {
+      console.log(`🗑️  Deleted photo from Supabase Storage: ${filePath}`);
     }
   } catch (err) {
-    console.warn('⚠️  Could not delete photo from Firebase Storage:', err.message);
+    console.warn('⚠️  deletePhotoFromSupabase error:', err.message);
   }
 }
 
@@ -355,14 +339,14 @@ router.post(
 
       let photo_url = null;
 
-      // Upload photo to Firebase Storage if provided — fails gracefully if Firebase is misconfigured
+      // Upload photo to Supabase Storage if provided — fails gracefully if unconfigured
       if (req.file) {
         try {
           const tempPrefix = `student_${Date.now()}`;
-          photo_url = await uploadPhotoToFirebase(req.file, tempPrefix);
+          photo_url = await uploadPhotoToSupabase(req.file, tempPrefix);
         } catch (uploadErr) {
-          console.error('⚠️  Photo upload to Firebase failed (student will be saved without photo):', uploadErr.message);
-          photo_url = null; // Continue without photo rather than failing the whole request
+          console.error('⚠️  Photo upload to Supabase failed (student will be saved without photo):', uploadErr.message);
+          photo_url = null;
         }
       }
 
@@ -515,7 +499,7 @@ router.put(
 
       // Handle photo update if new file is attached
       if (req.file) {
-        const newPhotoUrl = await uploadPhotoToFirebase(
+        const newPhotoUrl = await uploadPhotoToSupabase(
           req.file,
           existingStudent.admission_number || id
         );
@@ -523,7 +507,7 @@ router.put(
         if (newPhotoUrl) {
           // Delete old photo if it existed
           if (existingStudent.photo_url) {
-            await deletePhotoFromFirebase(existingStudent.photo_url);
+            await deletePhotoFromSupabase(existingStudent.photo_url);
           }
           updates.push(`photo_url = $${paramIndex++}`);
           values.push(newPhotoUrl);
@@ -611,9 +595,9 @@ router.delete('/:id', async (req, res, next) => {
     // 2. Delete from PostgreSQL
     await query('DELETE FROM students WHERE id = $1', [id]);
 
-    // 3. Delete photo from Firebase Storage if one exists
+    // 3. Delete photo from Supabase Storage if one exists
     if (student.photo_url) {
-      await deletePhotoFromFirebase(student.photo_url);
+      await deletePhotoFromSupabase(student.photo_url);
     }
 
     await logActivity(
