@@ -2,6 +2,7 @@
   "name": "student-management-system",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Full-stack Student Management System (React 19 + Node.js Express + PostgreSQL + Firebase Storage)",
   "workspaces": [
     "client",
@@ -13,6 +14,7 @@
     "dev:client": "npm --prefix client run dev",
     "start": "npm --prefix server start",
     "build": "npm --prefix client run build",
+    "build:client": "npm --prefix client run build",
     "migrate": "npm --prefix server run migrate",
     "db:migrate": "npm --prefix server run migrate",
     "install:all": "npm install --prefix client && npm install --prefix server"
