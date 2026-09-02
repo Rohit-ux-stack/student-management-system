@@ -22,5 +22,12 @@
     "tailwindcss": "^4.0.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.63.1",
+    "@rollup/rollup-linux-arm64-gnu": "^4.63.1",
+    "@rollup/rollup-darwin-x64": "^4.63.1",
+    "@rollup/rollup-darwin-arm64": "^4.63.1",
+    "@rollup/rollup-win32-x64-msvc": "^4.63.1"
   }
 }
