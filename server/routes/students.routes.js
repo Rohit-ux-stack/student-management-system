@@ -350,10 +350,15 @@ router.post(
 
       let photo_url = null;
 
-      // Upload photo to Firebase Storage if provided
+      // Upload photo to Firebase Storage if provided — fails gracefully if Firebase is misconfigured
       if (req.file) {
-        const tempPrefix = `student_${Date.now()}`;
-        photo_url = await uploadPhotoToFirebase(req.file, tempPrefix);
+        try {
+          const tempPrefix = `student_${Date.now()}`;
+          photo_url = await uploadPhotoToFirebase(req.file, tempPrefix);
+        } catch (uploadErr) {
+          console.error('⚠️  Photo upload to Firebase failed (student will be saved without photo):', uploadErr.message);
+          photo_url = null; // Continue without photo rather than failing the whole request
+        }
       }
 
       // Insert student record into PostgreSQL.

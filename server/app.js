@@ -15,8 +15,14 @@ dotenv.config();
 
 const app = express();
 
-// Base Middleware
-app.use(cors());
+// CORS — allow the Vercel frontend origin (set CORS_ORIGIN env var on Render)
+const allowedOrigin = process.env.CORS_ORIGIN || '*';
+app.use(cors({
+  origin: allowedOrigin,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
+  credentials: allowedOrigin !== '*',
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
