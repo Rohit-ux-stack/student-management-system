@@ -16,42 +16,47 @@ const router = Router();
 async function uploadPhotoToFirebase(file, identifier) {
   if (!file) return null;
 
-  const bucket = getFirebaseStorageBucket();
-  if (!bucket) {
-    console.warn(
-      '⚠️  Firebase Storage bucket is not available. Photo upload skipped.'
-    );
-    return null;
-  }
-
-  const timestamp = Date.now();
-  const sanitizedName = (file.originalname || 'photo.jpg').replace(
-    /[^a-zA-Z0-9.-]/g,
-    '_'
-  );
-  const destination = `students/${identifier}/${timestamp}-${sanitizedName}`;
-  const fileRef = bucket.file(destination);
-
-  await fileRef.save(file.buffer, {
-    metadata: {
-      contentType: file.mimetype,
-    },
-    resumable: false,
-  });
-
   try {
-    await fileRef.makePublic();
-    return (
-      fileRef.publicUrl() ||
-      `https://storage.googleapis.com/${bucket.name}/${destination}`
+    const bucket = getFirebaseStorageBucket();
+    if (!bucket) {
+      console.warn(
+        '⚠️  Firebase Storage bucket is not available. Photo upload skipped.'
+      );
+      return null;
+    }
+
+    const timestamp = Date.now();
+    const sanitizedName = (file.originalname || 'photo.jpg').replace(
+      /[^a-zA-Z0-9.-]/g,
+      '_'
     );
-  } catch {
-    // If uniform bucket-level access prevents makePublic(), generate long-lived signed URL
-    const [signedUrl] = await fileRef.getSignedUrl({
-      action: 'read',
-      expires: '01-01-2099',
+    const destination = `students/${identifier}/${timestamp}-${sanitizedName}`;
+    const fileRef = bucket.file(destination);
+
+    await fileRef.save(file.buffer, {
+      metadata: {
+        contentType: file.mimetype,
+      },
+      resumable: false,
     });
-    return signedUrl;
+
+    try {
+      await fileRef.makePublic();
+      return (
+        fileRef.publicUrl() ||
+        `https://storage.googleapis.com/${bucket.name}/${destination}`
+      );
+    } catch {
+      // If uniform bucket-level access prevents makePublic(), generate long-lived signed URL
+      const [signedUrl] = await fileRef.getSignedUrl({
+        action: 'read',
+        expires: '01-01-2099',
+      });
+      return signedUrl;
+    }
+  } catch (err) {
+    console.error('❌ uploadPhotoToFirebase error:', err.message);
+    return null; // Always degrade gracefully — never crash the request
   }
 }
 

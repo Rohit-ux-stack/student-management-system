@@ -78,8 +78,13 @@ export function getFirebaseStorageBucket(customBucketName) {
   }
 
   if (!storageBucket) {
-    const bucketName = customBucketName || process.env.FIREBASE_STORAGE_BUCKET;
-    storageBucket = admin.storage().bucket(bucketName);
+    try {
+      const bucketName = customBucketName || process.env.FIREBASE_STORAGE_BUCKET;
+      storageBucket = admin.storage().bucket(bucketName);
+    } catch (err) {
+      console.warn('⚠️  Firebase Storage bucket init failed:', err.message);
+      return null;
+    }
   }
 
   return storageBucket;
