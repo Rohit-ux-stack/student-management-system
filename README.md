@@ -1,6 +1,6 @@
 # 🎓 Student Management System
 
-A full-stack, enterprise-grade Student Management System built with **React 19**, **Node.js + Express**, **PostgreSQL**, and **Firebase Storage**, designed with a warm **Claymorphism** design system.
+A full-scale, enterprise-grade Student Management System built with **React 19**, **Node.js + Express**, **PostgreSQL**, and **Firebase Storage**, styled with a warm, custom **Claymorphism** design system.
 
 ---
 
@@ -10,24 +10,24 @@ A full-stack, enterprise-grade Student Management System built with **React 19**
   - Live search by student name, email, or admission number.
   - Multi-criteria filtering by academic course and year level.
   - Server-side pagination with URL query synchronization.
-  - Detailed student profile view with formatted contact details, academic info, and metadata.
+  - Detailed student profile views with formatted contact records, academic metrics, and photo avatars.
 - **➕ Student Enrollment & Updates**:
-  - Add and update student records with field-level validations.
+  - Comprehensive form validation for all 8 core student fields.
   - Drag-and-drop portrait photo uploads directly to Firebase Cloud Storage.
-  - Auto-generated institutional admission numbers (`ADM{YYYY}{SEQ}`).
+  - Auto-generated institutional admission numbers (`ADM{YYYY}{SEQ}`) driven by database sequences.
 - **☑️ Multi-Select Bulk Actions**:
-  - Select individual students or "Select All" on the active page.
-  - Perform bulk deletions with confirmation dialogs, removing database records and corresponding Firebase Storage assets.
+  - Select individual rows or use "Select All" across the active view.
+  - Perform bulk deletions with confirmation safeguards, simultaneously cleaning up database rows and orphaned Firebase Storage files.
 - **📊 Analytics Dashboard**:
-  - KPI summary metrics for total enrollments, active courses, and audit logs.
-  - Proportional course enrollment distribution chart with animated progress bars.
-  - Academic year cohort distribution breakdown.
-  - Live activity audit log feed tracking student additions, updates, deletions, and bulk operations.
-  - Dynamic zero-dummy-data empty states.
+  - KPI metric summaries for total enrollments, active programs, and audit logs.
+  - Dynamic course enrollment distribution breakdown.
+  - Academic year cohort tracking.
+  - Live activity audit log feed tracking system events (`CREATE`, `UPDATE`, `DELETE`, `BULK_DELETE`).
+  - Strict zero-dummy-data architecture—renders empty states dynamically when tables are clear.
 - **🍞 Claymorphic Toast Notifications**:
-  - Global reactive toast notifications with dual outset lighting shadows, rounded borders, and custom animations.
+  - Global reactive toast alerts featuring dual outset lighting shadows, custom border radiuses, and smooth entry animations.
 - **📥 CSV Export Utility**:
-  - One-click export of student directory records to a downloadable `.csv` file.
+  - One-click export capability that converts the active student dataset into a neatly formatted downloadable `.csv` file.
 
 ---
 
@@ -35,8 +35,8 @@ A full-stack, enterprise-grade Student Management System built with **React 19**
 
 - **Frontend (`/client`)**: React 19, TypeScript, Vite, Tailwind CSS 4, Lucide Icons, React Router v7.
 - **Backend (`/server`)**: Node.js, Express.js (ES Modules), Multer, PostgreSQL Client (`pg`), Firebase Admin SDK.
-- **Database**: PostgreSQL (relational constraints, indices, auto-updating triggers, and audit logging).
-- **Photo Storage**: Firebase Cloud Storage (secure binary asset uploads with public/signed URLs).
+- **Database**: PostgreSQL hosted on Supabase (relational constraints, custom functions, triggers, and indices).
+- **Photo Storage**: Firebase Cloud Storage (secure binary handling with remote signed URLs).
 
 ---
 
@@ -46,144 +46,117 @@ A full-stack, enterprise-grade Student Management System built with **React 19**
 student-management-system/
 ├── client/                     # Frontend React (Vite) application
 │   ├── src/
-│   │   ├── api/                # Type-safe API client functions
-│   │   ├── components/         # Reusable UI components (Avatar, FormField, ConfirmDialog, etc.)
+│   │   ├── api/                # Type-safe API client wrappers
+│   │   ├── components/         # Reusable UI elements (Avatar, FormField, ConfirmDialog)
 │   │   ├── context/            # React Contexts (ToastContext)
-│   │   ├── pages/              # Route pages (StudentListPage, FormPage, DetailPage, AnalyticsPage)
-│   │   ├── types/              # TypeScript interfaces & types
-│   │   ├── App.tsx             # Main routing & application layout
-│   │   ├── main.tsx            # React DOM mounting entry point
-│   │   └── index.css           # Claymorphic design system tokens & utilities
-│   ├── index.html              # HTML template
-│   ├── package.json            # Client dependencies and scripts
-│   ├── tsconfig.json           # Client TypeScript configuration
-│   └── vite.config.ts          # Vite build & proxy configuration
+│   │   ├── pages/              # Views (StudentListPage, StudentFormPage, DetailPage, AnalyticsPage)
+│   │   ├── types/              # TypeScript interfaces
+│   │   ├── App.tsx             # Root routing layout
+│   │   ├── main.tsx            # DOM entry point
+│   │   └── index.css           # Claymorphic design tokens & utility classes
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── vite.config.ts
 ├── server/                     # Backend Express.js application
 │   ├── config/
 │   │   ├── db.js               # PostgreSQL connection pool configuration
-│   │   └── firebase.js         # Firebase Admin SDK & Cloud Storage bucket
+│   │   └── firebase.js         # Firebase Admin SDK & Bucket setup
 │   ├── middleware/
-│   │   ├── upload.js           # Multer file upload & validation middleware
+│   │   ├── upload.js           # Multer file parsing & type validation
 │   │   └── validateStudent.js  # Field validation middleware
 │   ├── migrations/
-│   │   ├── 001_create_students_table.sql # PostgreSQL DDL migration
-│   │   ├── 002_add_activity_logs.sql    # Audit logs migration
-│   │   ├── migrate.js          # Migration execution runner
-│   │   └── schema.sql          # Complete baseline schema documentation
+│   │   ├── 001_create_students_table.sql # Core table schema migration
+│   │   ├── 002_add_activity_logs.sql    # Audit trail table migration
+│   │   └── migrate.js          # Migration runner script
 │   ├── routes/
-│   │   ├── students.routes.js  # Student CRUD & bulk delete endpoints
-│   │   ├── analytics.routes.js # Analytics aggregation endpoints
+│   │   ├── students.routes.js  # Student CRUD & bulk action endpoints
+│   │   ├── analytics.routes.js # Enrollment aggregation routes
 │   │   └── activity.routes.js  # Activity logs endpoint
-│   ├── utils/
-│   │   └── logger.js           # Activity log helper
-│   ├── app.js                  # Express app initialization & error handling
-│   ├── server.js               # Server entry point & HTTP listener
-│   └── package.json            # Server dependencies and scripts
-├── .env.example                # Environment variables template
-├── .gitignore                  # Git ignore rules (protects credentials & build output)
-├── package.json                # Root workspace configuration & scripts
-└── README.md                   # Project documentation
+│   ├── app.js                  # Express middleware setup
+│   ├── server.js               # HTTP server listener
+│   └── package.json
+├── vercel.json                 # Vercel monorepo deployment bridge
+├── .env.example                # Environment configuration template
+├── .gitignore                  # Git exclusion rules
+├── package.json                # Root workspace orchestration
+└── README.md
 ```
 
 ---
 
-## 🗄️ Database Schema
+## 🗄️ Database Schema Summary
 
-### `students` Table
-| Column | Type | Constraints | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | `UUID` | `PRIMARY KEY, DEFAULT gen_random_uuid()` | Unique immutable identifier |
-| `admission_number` | `VARCHAR(30)` | `UNIQUE, NOT NULL` | Structured student ID (`ADM{YEAR}{SEQ}`) |
-| `name` | `VARCHAR(255)` | `NOT NULL` | Full student name |
-| `course` | `VARCHAR(100)` | `NOT NULL` | Enrolled academic program |
-| `year` | `SMALLINT` | `NOT NULL, CHECK (year BETWEEN 1 AND 8)` | Academic year level |
-| `date_of_birth` | `DATE` | `NOT NULL` | Student birth date |
-| `email` | `VARCHAR(255)` | `UNIQUE, NOT NULL, CHECK (format)` | Primary email address |
-| `mobile_number` | `VARCHAR(20)` | `NOT NULL, CHECK (format)` | Formatted phone number |
-| `gender` | `VARCHAR(20)` | `NOT NULL` | Gender classification |
-| `address` | `TEXT` | `NULLABLE` | Residential / mailing address |
-| `photo_url` | `TEXT` | `NULLABLE` | Firebase Storage download URL |
-| `created_at` | `TIMESTAMPTZ` | `NOT NULL, DEFAULT NOW()` | Record creation timestamp |
-| `updated_at` | `TIMESTAMPTZ` | `NOT NULL, DEFAULT NOW()` | Auto-updated modification timestamp |
-
-### `activity_logs` Table
-| Column | Type | Constraints | Description |
-| :--- | :--- | :--- | :--- |
-| `id` | `UUID` | `PRIMARY KEY, DEFAULT gen_random_uuid()` | Unique log identifier |
-| `action_type` | `VARCHAR(50)` | `NOT NULL` | Action tag (`CREATE_STUDENT`, `UPDATE_STUDENT`, `DELETE_STUDENT`, `BULK_DELETE_STUDENTS`) |
-| `description` | `TEXT` | `NOT NULL` | Human-readable log description |
-| `created_at` | `TIMESTAMPTZ` | `NOT NULL, DEFAULT NOW()` | Event timestamp (indexed DESC) |
+* **`students`**: Stores complete biographical, academic, and metadata records for each student, including a unique `admission_number` and remote `photo_url` reference. Protected by strict field-level check constraints (email format, phone validation, year ranges 1–8).
+* **`activity_logs`**: Operates as a persistent audit trail capturing system events with descriptive text and timestamps indexed for high-performance querying.
 
 ---
 
 ## 🚀 Getting Started
 
 ### 1. Prerequisites
-- **Node.js**: v18 or higher (v20+ recommended)
-- **PostgreSQL**: Local instance or cloud database (e.g., Supabase / Neon / AWS RDS)
-- **Firebase Project**: Optional, for photo storage credentials
+
+* **Node.js**: v18+ (v20+ recommended)
+* **PostgreSQL**: v15+ (configured via Supabase or local instance)
+* **Firebase Project**: Optional, required for cloud photo asset storage
 
 ### 2. Installation
-Clone the repository and install all dependencies:
-```bash
-# Clone the repository
-git clone https://github.com/your-username/student-management-system.git
-cd student-management-system
 
-# Install all monorepo dependencies (client + server + root)
+Clone the repository and install all monorepo dependencies:
+
+```bash
+git clone https://github.com/Rohit-ux-stack/student-management-system.git
+cd student-management-system
 npm install
 ```
 
 ### 3. Environment Variables
-Copy `.env.example` to `.env` in the root directory:
-```bash
-cp .env.example .env
-```
-Fill in your database URL and Firebase credentials in `.env`:
+
+Copy `.env.example` to `.env` in the root workspace directory and populate your remote credentials:
+
 ```env
 PORT=3000
 NODE_ENV=development
-DATABASE_URL=postgresql://postgres:password@localhost:5432/postgres
-FIREBASE_PROJECT_ID=your-firebase-project-id
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk@your-project.iam.gserviceaccount.com
+DATABASE_URL=postgresql://postgres.your-project:password@aws-0-region.pooler.supabase.com:6543/postgres
+FIREBASE_PROJECT_ID=student-management-system-id
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk@student-management-system-id.iam.gserviceaccount.com
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
+FIREBASE_STORAGE_BUCKET=student-management-system-id.appspot.com
 ```
 
-### 4. Run Migrations
-Run the migration script to provision the tables, triggers, and indices:
+### 4. Run Database Migrations
+
+Provision the schema tables, triggers, and sequences inside your PostgreSQL instance:
+
 ```bash
 npm run migrate
 ```
 
-### 5. Start Development Server
-Run both the backend Express API and the frontend React Vite client with a single concurrent command:
+### 5. Start Development Environment
+
+Boot up the concurrent development servers:
+
 ```bash
 npm run dev
 ```
 
-- **Frontend Client**: `http://localhost:5173`
-- **Backend API**: `http://localhost:3000`
-- **Health Diagnostic**: `http://localhost:3000/api/health`
+* **Frontend Client**: `http://localhost:5174` (or `5173`)
+* **Backend API**: `http://localhost:3000`
 
 ---
 
-## 📜 Available Scripts
+## 📜 Available Root Scripts
 
 | Command | Description |
-| :--- | :--- |
-| `npm run dev` | Runs both server and client concurrently in development mode |
-| `npm run dev:server` | Runs Express backend only with nodemon |
-| `npm run dev:client` | Runs Vite React frontend only |
-| `npm run migrate` | Executes PostgreSQL DDL migrations in sequence |
-| `npm run build` | Builds the client production bundle |
-| `npm run start` | Starts the production Express server |
+| --- | --- |
+| `npm run dev` | Runs both backend and frontend concurrently |
+| `npm run migrate` | Executes sequential PostgreSQL database migrations |
+| `npm run build` | Compiles the client production distribution bundle |
+| `npm run start` | Boots the production Express server |
 
 ---
 
-## 🔒 Security & Git Safety
+## 🔒 Security Architecture
 
-- `.env` and all credential keys are strictly excluded via `.gitignore`.
-- SQL queries use parameterized placeholders (`$1`, `$2`) to prevent SQL injection.
-- Strict MIME type and 5MB payload size validation on photo uploads.
-- PostgreSQL connections over SSL with `rejectUnauthorized: false` for Supabase compatibility.
+* Parameterized SQL queries (`$1`, `$2`) to completely eliminate SQL injection vulnerabilities.
+* Strict payload limits and file extension checks enforced on multi-part uploads.
+* Credentials and local configuration artifacts (`.env`, `node_modules/`, `dist/`) are strictly untracked via `.gitignore`.
