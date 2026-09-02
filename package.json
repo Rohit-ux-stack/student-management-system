@@ -1,0 +1,32 @@
+{
+  "name": "student-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack Student Management System (React 19 + Node.js Express + PostgreSQL + Firebase Storage)",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue.bold,green.bold\" \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "start": "npm --prefix server start",
+    "build": "npm --prefix client run build",
+    "migrate": "npm --prefix server run migrate",
+    "db:migrate": "npm --prefix server run migrate",
+    "install:all": "npm install --prefix client && npm install --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "student-management",
+    "react",
+    "vite",
+    "express",
+    "postgresql",
+    "firebase"
+  ],
+  "license": "ISC"
+}
