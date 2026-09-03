@@ -105,7 +105,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
       {/* Floating Claymorphic Toast Container */}
       <div
-        className="fixed top-6 right-6 z-50 flex flex-col gap-3 max-w-sm sm:max-w-md w-full pointer-events-none"
+        className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-3 w-max max-w-[calc(100vw-2rem)] pointer-events-none"
         aria-live="polite"
         aria-label="Notifications"
       >
@@ -119,9 +119,9 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
               role="status"
               className={`clay-toast ${toastTypeClass} animate-toast pointer-events-auto p-4 flex items-center justify-between gap-3`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <IconComponent className="w-5 h-5 shrink-0" />
-                <p className="text-sm font-semibold m-0 leading-snug">
+                <p className="text-sm font-semibold m-0 leading-snug min-w-0 break-words">
                   {t.message}
                 </p>
               </div>
